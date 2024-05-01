@@ -4,23 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        main {
+            display: flex;
+            justify-content: space-around;
+        } 
+        div {
+            display: flex;
+            flex-direction: column;
+        }
+        div * {
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
-    <input type="text" id="nickname">
-    <button id="connect">Connect with socket</button>
-    <pre id="pre"></pre>
-    <input type="text" id="input">
-    <button id="submit">Submit</button>
-    <script>
-        let ws = null;
-        document.getElementById('connect').addEventListener('click', () => {
-            ws = new WebSocket(`ws://localhost:5500/?nickname=${document.getElementById('nickname').value}`);
-            console.log('connection');
-            ws.onmessage = message => console.log(message.data);
-        });
-        document.getElementById('submit').addEventListener('click', () => {
-            ws.send(document.getElementById('input').value);
-        })
-    </script>
+    <main>
+        <div id="login">
+            <h1>Login</h1>
+            <label for="nickname">Nickname</label>
+            <input type="text" name="nickname" id="l-nickname">
+            <label for="password">Password</label>
+            <input type="text" name="password" id="l-password">
+            <button id="l-submit">Login</button>
+            <p id="l-error"></p>
+        </div>
+        <div id="register">
+            <h1>Register</h1>
+            <label for="nickname">Nickname</label>
+            <input type="text" name="nickname" id="r-nickname">
+            <label for="password">Password</label>
+            <input type="text" name="password" id="r-password">
+            <button id="r-submit">Register</button>
+            <p id="r-error"></p>
+        </div>
+    </main>
+    <script type="module" src="login.js"></script>
 </body>
 </html>

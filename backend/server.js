@@ -7,7 +7,7 @@ const utils = require('./utils');
 const gameModel = require('./models/gameModel');
 const WebSocketServer = require('websocket').server;
 
-const hostname = '127.0.0.1';
+const hostname = '10.188.198.5';
 const port = 5500;
 
 const server = createServer((req, res) => {
@@ -70,17 +70,25 @@ const ws = new WebSocketServer({
 });
 let clients = [];
 
-ws.on('request', (request) => {
+ws.on('request', async (request) => {
     if (!request.resourceURL.path.match(/\/\?nickname=(.+)/)) {
         request.reject();
     }
     else {
         let connection = request.accept(null, request.origin);
-        clients.push({
+        const user = {
             nickname: utils.getParams(request.resourceURL.path).get('nickname'),
             connection: connection
-        });
-        connection.on('open', () => console.log('Connection etablished'));
+        }
+        clients.push(user);
+        const potentialGame = await gameModel.findByName(user.nickname);
+        if (potentialGame){
+            console.log('New Connection');
+            const player1 = clients.find((c) => c.nickname === potentialGame.player1.nickname);
+            const player2 = clients.find((c) => c.nickname === potentialGame.player2.nickname);
+            if (player1 !== undefined) player1.connection.send(JSON.stringify({board: potentialGame.board}));
+            if (player2 !== undefined) player2.connection.send(JSON.stringify({board: potentialGame.board}));
+        }
         connection.on('message', async message => {
             console.log(`Received message ${message.utf8Data}`);
             let data = null;
@@ -95,8 +103,10 @@ ws.on('request', (request) => {
                 try {
                     let game = await gameModel.findById(data.id);
                     let newBoard = await gameModel.update(data.id, data.board);
-                    clients.find((c) => c.nickname === game.player1.nickname).connection.send(JSON.stringify({board: newBoard}));
-                    clients.find((c) => c.nickname === game.player2.nickname).connection.send(JSON.stringify({board: newBoard}));
+                    const player1 = clients.find((c) => c.nickname === game.player1.nickname);
+                    const player2 = clients.find((c) => c.nickname === game.player2.nickname);
+                    if (player1 !== undefined) player1.connection.send(JSON.stringify({board: newBoard}));
+                    if (player2 !== undefined) player2.connection.send(JSON.stringify({board: newBoard}));
                 } catch (error) {
                     console.log(error);
                 }

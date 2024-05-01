@@ -15,6 +15,13 @@ const findById = (id) => {
     })
 }
 
+const findByName = (nickname) => {
+    return new Promise((resolve, reject) => {
+        const game = games.find((g) => g.player1.nickname === nickname || g.player2.nickname === nickname);
+        resolve(game);
+    })
+}
+
 const create = (player1, player2) => {
     return new Promise((resolve, reject) => {
         let newGame = new Game(player1, player2);
@@ -44,6 +51,7 @@ const deleteById = (id) => {
 module.exports = {
     findAll,
     findById,
+    findByName,
     create,
     update,
     deleteById
