@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <input type="text" id="nickname">
+    <button id="connect">Connect with socket</button>
+    <pre id="pre"></pre>
+    <input type="text" id="input">
+    <button id="submit">Submit</button>
+    <script>
+        let ws = null;
+        document.getElementById('connect').addEventListener('click', () => {
+            ws = new WebSocket(`ws://localhost:5500/?nickname=${document.getElementById('nickname').value}`);
+            console.log('connection');
+            ws.onmessage = message => console.log(message.data);
+        });
+        document.getElementById('submit').addEventListener('click', () => {
+            ws.send(document.getElementById('input').value);
+        })
+    </script>
+</body>
+</html>

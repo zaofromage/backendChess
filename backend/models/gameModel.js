@@ -24,8 +24,27 @@ const create = (player1, player2) => {
     })
 }
 
+const update = (id, board) => {
+    return new Promise(async (resolve, reject) => {
+        const index = games.findIndex((g) => g.id === id);
+        games[index].board = board;
+        writeDataToFile('./data/games.json', games);
+        resolve(games[index].board);
+    })
+}
+
+const deleteById = (id) => {
+    return new Promise(async (resolve, reject) => {
+        games = games.filter((g) => g.id !== id);
+        writeDataToFile('./data/games.json', games);
+        resolve();
+    })
+}
+
 module.exports = {
     findAll,
     findById,
-    create
+    create,
+    update,
+    deleteById
 }

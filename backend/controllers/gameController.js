@@ -64,8 +64,28 @@ const createGame = async (req, res) => {
     }
 }
 
+// @desc delete a game by its id
+// @route DELETE /game/[id]
+const deleteGame = async (req, res) => {
+    try {
+        const game = await gameModel.findById(req.url.split('/')[2]);
+        if (!game) {
+            res.writeHead(404, {'Content-Type': 'application/json'});
+            res.end(JSON.stringify({message: 'Game not found'}));
+        }
+        else {
+            await gameModel.deleteById(game.id);
+            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.end(JSON.stringify({message: "game has been successfully removed"}));
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 module.exports = {
     getGames,
     getGameById,
-    createGame
+    createGame,
+    deleteGame
 }

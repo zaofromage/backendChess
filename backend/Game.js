@@ -2,6 +2,7 @@
 const { v4:uuidv4 } = require('uuid');
 const { convertFEN } = require('./utils');
 
+
 module.exports = class Game {
     constructor (player1, player2) {
         this.id = uuidv4();
