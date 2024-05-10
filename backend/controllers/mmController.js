@@ -9,7 +9,10 @@ const getMatchmaking = async (req, res) => {
     try {
         const mm = await mmModel.findAll();
 
-        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        });
         res.end(JSON.stringify(mm));
     } catch (error) {
         console.log(error);
@@ -23,11 +26,17 @@ const getMatchmakingByName = async (req, res) => {
         const user = await mmModel.findByName(req.url.split('/')[2]);
 
         if (!user) {
-            res.writeHead(404, {'Content-Type': 'application/json'});
+            res.writeHead(404, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify({message: 'User not found'}));
         }
         else {
-            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify(user));
         }
 
@@ -43,12 +52,18 @@ const enterMatchmaking = async (req, res) => {
     try {
         const user = await userModel.findByName(nickname);
         if (!user) {
-            res.writeHead(404, {'Content-Type': 'application/json'});
+            res.writeHead(404, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify({message: 'User not found'}));
         }
         else {
             await mmModel.addToMm(user);
-            res.writeHead(200, { 'Content-Type': 'application/json'});
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify({message: `${nickname} has been added to the matchmaking queue`}));
         }
         
@@ -59,15 +74,21 @@ const enterMatchmaking = async (req, res) => {
 
 const getOutMatchmaking = async (req, res) => {
     try {
-        const user = await userModel.findByName(req.url.split('/')[2]);
+        const user = await userModel.findByName(getParams(req.url).get('nickname'));
 
         if (!user) {
-            res.writeHead(404, {'Content-Type': 'application/json'});
+            res.writeHead(404, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify({message: 'User not found'}));
         }
         else {
             await mmModel.deleteByName(user.nickname);
-            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             return res.end(JSON.stringify({message : `${user.nickname} was successfully removed from the queue`}));
         }
 

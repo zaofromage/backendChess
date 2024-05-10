@@ -7,7 +7,10 @@ const getUsers = async (req, res) => {
     try {
         const users = await userModel.findAll();
 
-        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        });
         res.end(JSON.stringify(users));
     } catch (error) {
         console.log(error);
@@ -21,11 +24,17 @@ const getUserByName = async (req, res) => {
         const user = await userModel.findByName(req.url.split('/')[2]);
 
         if (!user) {
-            res.writeHead(404, {'Content-Type': 'application/json'});
+            res.writeHead(404, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify({message: 'User not found'}));
         }
         else {
-            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify(user));
         }
 
@@ -53,14 +62,20 @@ const createUser = async (req, res) => {
     
             const newUser = await userModel.create(user);
     
-            res.writeHead(201, { 'Content-Type' : 'application/json' });
+            res.writeHead(201, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             return res.end(JSON.stringify(newUser));
         }
         else {
-            res.writeHead(409, { 'Content-Type': 'application/json' });
+            res.writeHead(409, {
+                'Content-Type': 'application/json',
+                'X-Content-Type-Options': 'nosniff',
+                'Access-Control-Allow-Origin': '*'
+            });
             return res.end(JSON.stringify({message: "This nickname is already taken"}));
         }
-
     } catch (error) {
         console.log(error);
     }
@@ -74,7 +89,10 @@ const updateUser = async (req, res) => {
         const user = await userModel.findByName(userNickname);
 
         if (!user) {
-            res.writeHead(404, {'Content-Type': 'application/json'});
+            res.writeHead(404, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify({message: 'User not found'}));
         }
         else {
@@ -90,7 +108,10 @@ const updateUser = async (req, res) => {
 
             const updUser = await userModel.update(userNickname, userData);
 
-            res.writeHead(200, { 'Content-Type' : 'application/json' });
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             return res.end(JSON.stringify(updUser));
         }
         
@@ -107,12 +128,18 @@ const deleteUser = async (req, res) => {
         const user = await userModel.findByName(req.url.split('/')[2]);
 
         if (!user) {
-            res.writeHead(404, {'Content-Type': 'application/json'});
+            res.writeHead(404, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify({message: 'User not found'}));
         }
         else {
             await userModel.deleteByName(user.nickname);
-            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             return res.end(JSON.stringify({message : `${user.nickname} has successfully been removed`}));
         }
 

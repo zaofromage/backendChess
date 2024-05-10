@@ -2,12 +2,12 @@ const { createServer } = require('node:http');
 const { parse } = require('node:url');
 const { getUsers, getUserByName, createUser, updateUser, deleteUser } = require('./controllers/userController');
 const { getMatchmaking, getMatchmakingByName, enterMatchmaking, getOutMatchmaking } = require('./controllers/mmController');
-const { getGames, getGameById, createGame, deleteGame } = require('./controllers/gameController');
+const { getGames, getGameById, getGameByName, createGame, deleteGame } = require('./controllers/gameController');
 const utils = require('./utils');
 const gameModel = require('./models/gameModel');
 const WebSocketServer = require('websocket').server;
 
-const hostname = '10.188.198.5';
+const hostname = '127.0.0.1';
 const port = 5500;
 
 const server = createServer((req, res) => {
@@ -37,7 +37,7 @@ const server = createServer((req, res) => {
     else if (req.url.match(/\/enter-matchmaking\?nickname=(.+)/) && req.method === 'GET'){
         enterMatchmaking(req, res);
     }
-    else if (req.url.match(/\/matchmaking\/(.+)/) && req.method === 'DELETE'){
+    else if (req.url.match(/\/get-out-matchmaking\?nickname=(.+)/) && req.method === 'GET'){
         getOutMatchmaking(req, res);
     }
     //game part
@@ -46,6 +46,9 @@ const server = createServer((req, res) => {
     }
     else if (req.url.match(/\/game\/(.+)/) && req.method === 'GET'){
         getGameById(req, res);
+    }
+    else if (req.url.match(/\/game\?nickname=(.+)/) && req.method == 'GET') {
+        getGameByName(req, res);
     }
     else if (req.url.match(/\/create-game\?player1=(.+)\&player2=(.+)/) && req.method === 'GET'){
         createGame(req, res);
@@ -81,6 +84,7 @@ ws.on('request', async (request) => {
             connection: connection
         }
         clients.push(user);
+        console.log(clients.length);
         const potentialGame = await gameModel.findByName(user.nickname);
         if (potentialGame){
             console.log('New Connection');
@@ -90,7 +94,7 @@ ws.on('request', async (request) => {
             if (player2 !== undefined) player2.connection.send(JSON.stringify({board: potentialGame.board}));
         }
         connection.on('message', async message => {
-            console.log(`Received message ${message.utf8Data}`);
+            //console.log(`Received message ${message.utf8Data}`);
             let data = null;
             try {
                 data = JSON.parse(message.utf8Data);
@@ -101,10 +105,13 @@ ws.on('request', async (request) => {
                 connection.send("Wrong data");
             } else {
                 try {
+                    console.log(clients);
                     let game = await gameModel.findById(data.id);
                     let newBoard = await gameModel.update(data.id, data.board);
                     const player1 = clients.find((c) => c.nickname === game.player1.nickname);
+                    console.log(`player1 : ${player1}`);
                     const player2 = clients.find((c) => c.nickname === game.player2.nickname);
+                    console.log(`player2 : ${player2}`);
                     if (player1 !== undefined) player1.connection.send(JSON.stringify({board: newBoard}));
                     if (player2 !== undefined) player2.connection.send(JSON.stringify({board: newBoard}));
                 } catch (error) {

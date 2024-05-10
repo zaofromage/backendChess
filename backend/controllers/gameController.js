@@ -9,7 +9,10 @@ const getGames = async (req, res) => {
     try {
         const games = await gameModel.findAll();
 
-        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        });
         res.end(JSON.stringify(games));
     } catch (error) {
         console.log(error);
@@ -23,11 +26,41 @@ const getGameById = async (req, res) => {
         const game = await gameModel.findById(req.url.split('/')[2]);
 
         if (!game) {
-            res.writeHead(404, {'Content-Type': 'application/json'});
+            res.writeHead(404, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify({message: 'Game not found'}));
         }
         else {
-            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
+            res.end(JSON.stringify(game));
+        }
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const getGameByName = async (req ,res) => {
+    try {
+        const game = await gameModel.findByName(getParams(req.url).get('nickname'));
+
+        if (!game) {
+            res.writeHead(404, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
+            res.end(JSON.stringify({message: 'Game not found'}));
+        }
+        else {
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify(game));
         }
 
@@ -41,18 +74,23 @@ const getGameById = async (req, res) => {
 const createGame = async (req, res) => {
     try {
         const params = getParams(req.url);
-        console.log(params);
         const player1 = await mmModel.findByName(params.get('player1'));
         const player2 = await mmModel.findByName(params.get('player2'));
         if (!player1 || !player2) {
-            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.writeHead(404, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify({message : "Player 1 or 2 not found in matchmaking queue"}))
         }
         else {
             await mmModel.deleteByName(player1.nickname);
             await mmModel.deleteByName(player2.nickname);
             const id = await gameModel.create(player1, player2);
-            res.writeHead(201, { 'Content-Type': 'application/json' });
+            res.writeHead(201, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify({
                 message: `Game between ${player1.nickname} and ${player2.nickname} successfully created`,
                 id: id
@@ -70,12 +108,18 @@ const deleteGame = async (req, res) => {
     try {
         const game = await gameModel.findById(req.url.split('/')[2]);
         if (!game) {
-            res.writeHead(404, {'Content-Type': 'application/json'});
+            res.writeHead(404, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify({message: 'Game not found'}));
         }
         else {
             await gameModel.deleteById(game.id);
-            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
             res.end(JSON.stringify({message: "game has been successfully removed"}));
         }
     } catch (error) {
@@ -86,6 +130,7 @@ const deleteGame = async (req, res) => {
 module.exports = {
     getGames,
     getGameById,
+    getGameByName,
     createGame,
     deleteGame
 }
