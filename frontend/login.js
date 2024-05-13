@@ -11,7 +11,7 @@ document.getElementById('l-submit').addEventListener('click', async () => {
     } else {
         document.cookie = `user=${user.nickname}`;
         console.log(document.cookie)
-        setTimeout(() => window.location.replace('menu.html'), 3000);
+        window.location.replace('menu.html');
     }
 });
 

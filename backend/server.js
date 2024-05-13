@@ -123,6 +123,7 @@ ws.on('request', async (request) => {
         connection.on('close', () => {
             clients = clients.filter((c) => c.connection !== connection);
             console.log('Closed');
+            console.log(clients.length);
         });
     }  
 })
