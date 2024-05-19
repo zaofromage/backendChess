@@ -7,6 +7,8 @@ console.log(document.cookie);
 const user = getCookie('user');
 const id   = getCookie('id');
 const fps  = 25;
+let player = null;
+let state = 'w';
 let board  = convertFEN('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
 let preBoard = convertFEN('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
 let prePos = null;
@@ -59,10 +61,11 @@ kingWhite.src = "1x/w_king_1x_ns.png"
 const kingBlack = new Image();
 kingBlack.src = "1x/b_king_1x_ns.png"
 
-function send() {
+function send(move) {
     ws.send(JSON.stringify({
         id: id,
-        board: board
+        board: board,
+        move: move
     }));
     update();
 };
@@ -126,17 +129,21 @@ function mouseup() {
         clearInterval(mouseDownID);
         const pos = getMouseBoardPos();
         const move =  { x:prePos.x, y:prePos.y, dx:pos.x, dy:pos.y};
-        console.log(move);
-        //console.log(isLegal(board, move));
-        if (isLegal(preBoard, move)){
-            board[pos.x][pos.y] = selected;
+        if (isLegal(preBoard, move, player, state)){
+            if ((selected === 'p' || selected === 'P') && (pos.x === 0 || pos.x === 7)) {
+
+                board[pos.x][pos.y] = promote();
+            } else {
+                board[pos.x][pos.y] = selected;
+            }
+            send(move);
         }
         else {
             board[prePos.x][prePos.y] = selected;
+            update();
         }
         selected = undefined;
         mouseDownID = -1;
-        send();
     }
 }
 
@@ -174,12 +181,14 @@ function update() {
     });
 };
 
-
-
 function round (val) {
     return val - val%tileSize
 }
 
+function promote() {
+    if (selected === 'p') return 'q';
+    if (selected === 'P') return 'Q';
+}
 
 canvas.addEventListener("mousemove", (evt) => {
     let mousePos = getMousePos(canvas, evt);
@@ -200,8 +209,12 @@ const setUpWs = () => {
         ws = new WebSocket(`ws://${hostname}/?nickname=${user}`);
         console.log(ws);
         ws.onmessage = message => {
-            board = JSON.parse(message.data).board;
+            let game = JSON.parse(message.data);
+            player = game.player1.nickname === user ? game.player1 : game.player2;
+            board = game.board;
+            state = game.state;
             update();
+            console.log(state);
         }
     } catch (error) {
         console.log(error);

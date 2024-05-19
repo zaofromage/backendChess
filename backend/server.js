@@ -90,8 +90,8 @@ ws.on('request', async (request) => {
             console.log('New Connection');
             const player1 = clients.find((c) => c.nickname === potentialGame.player1.nickname);
             const player2 = clients.find((c) => c.nickname === potentialGame.player2.nickname);
-            if (player1 !== undefined) player1.connection.send(JSON.stringify({board: potentialGame.board}));
-            if (player2 !== undefined) player2.connection.send(JSON.stringify({board: potentialGame.board}));
+            if (player1 !== undefined) player1.connection.send(JSON.stringify(potentialGame));
+            if (player2 !== undefined) player2.connection.send(JSON.stringify(potentialGame));
         }
         connection.on('message', async message => {
             //console.log(`Received message ${message.utf8Data}`);
@@ -105,15 +105,12 @@ ws.on('request', async (request) => {
                 connection.send("Wrong data");
             } else {
                 try {
-                    console.log(clients);
                     let game = await gameModel.findById(data.id);
                     let newBoard = await gameModel.update(data.id, data.board);
                     const player1 = clients.find((c) => c.nickname === game.player1.nickname);
-                    console.log(`player1 : ${player1}`);
                     const player2 = clients.find((c) => c.nickname === game.player2.nickname);
-                    console.log(`player2 : ${player2}`);
-                    if (player1 !== undefined) player1.connection.send(JSON.stringify({board: newBoard}));
-                    if (player2 !== undefined) player2.connection.send(JSON.stringify({board: newBoard}));
+                    if (player1 !== undefined) player1.connection.send(JSON.stringify(newBoard));
+                    if (player2 !== undefined) player2.connection.send(JSON.stringify(newBoard));
                 } catch (error) {
                     console.log(error);
                 }

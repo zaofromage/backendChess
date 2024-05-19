@@ -34,9 +34,10 @@ const create = (player1, player2) => {
 const update = (id, board) => {
     return new Promise(async (resolve, reject) => {
         const index = games.findIndex((g) => g.id === id);
+        games[index].state = games[index].state === 'w' ? 'b':'w';
         games[index].board = board;
         writeDataToFile('./data/games.json', games);
-        resolve(games[index].board);
+        resolve(games[index]);
     })
 }
 

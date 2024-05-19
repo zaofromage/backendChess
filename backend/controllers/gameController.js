@@ -1,7 +1,7 @@
 const gameModel = require('../models/gameModel');
 const userModel = require('../models/userModel');
 const mmModel   = require('../models/mmModel');
-const { getPostData, getParams } = require('../utils');
+const { getPostData, getParams, random } = require('../utils');
 
 // @desc Get all games
 // @route GET /games
@@ -86,7 +86,19 @@ const createGame = async (req, res) => {
         else {
             await mmModel.deleteByName(player1.nickname);
             await mmModel.deleteByName(player2.nickname);
-            const id = await gameModel.create(player1, player2);
+            const player1color = ['w', 'b'][random(2)];
+            const player2color = player1color === 'w' ? 'b' : 'w';
+            const gamePlayer1 = {
+                nickname: player1.nickname,
+                elo: player1.elo,
+                color: player1color
+            };
+            const gamePlayer2 = {
+                nickname: player2.nickname,
+                elo: player2.elo,
+                color: player2color
+            };
+            const id = await gameModel.create(gamePlayer1, gamePlayer2);
             res.writeHead(201, {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'

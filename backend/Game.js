@@ -8,6 +8,7 @@ module.exports = class Game {
         this.id = uuidv4();
         this.player1 = player1;
         this.player2 = player2;
-        this.board = convertFEN('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
+        this.board   = convertFEN('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
+        this.state   = 'w';
     }
 }

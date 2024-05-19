@@ -54,9 +54,14 @@ const getParams = (url) => {
     return paramList;
 }
 
+const random = (max) => {
+    return Math.floor(Math.random() * max);
+}
+
 module.exports = {
     writeDataToFile,
     getPostData,
     convertFEN,
-    getParams
+    getParams,
+    random
 }
