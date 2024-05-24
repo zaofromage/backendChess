@@ -9,6 +9,7 @@ export const isLegal = (board, move, player, state) => {
     if (isSameColor(board, move)) return false;
     if (isSamePosition(board, move)) return false;
     if (pieceMoves(board, move).find(m => m.dx === move.dx && m.dy === move.dy) === undefined) return false;
+    if (kingIsChecked(getBoardAfterMove(board, move), player.color)) return false;
     return true;
 }
 
@@ -221,6 +222,106 @@ function pieceMoves(board, move) {
     }
 }
 
+export function kingIsChecked(board, color) {
+    let controlledSquare = getAllMoves(board, opposite(color));
+    let kingPosition = getKing(board, color);
+    return controlledSquare.find(p => p.dx === kingPosition.x && p.dy === kingPosition.y) !== undefined;
+}
+
+function getAllMoves(board, color) {
+    let controlledSquare = [];
+    if (color === 'b') {
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                let moves = [];
+                switch (board[i][j]) {
+                    case 'p':
+                        pawnPossible(board, { x: i, y: j}).map(m => {
+                            moves.push({ x: i, y: j, dx: m.dx, dy: m.dy });
+                        });
+                        controlledSquare = controlledSquare.concat(moves);
+                        break;
+                    case 'r': 
+                        rookPossible(board, { x: i, y: j}).map(m => {
+                            moves.push({ x: i, y: j, dx: m.dx, dy: m.dy });
+                        });
+                        controlledSquare = controlledSquare.concat(moves);
+                        break;
+                    case 'b':
+                        bishopPossible(board, { x: i, y: j}).map(m => {
+                            moves.push({ x: i, y: j, dx: m.dx, dy: m.dy });
+                        });
+                        controlledSquare = controlledSquare.concat(moves);
+                        break;
+                    case 'q': 
+                        queenPossible(board, { x: i, y: j}).map(m => {
+                            moves.push({ x: i, y: j, dx: m.dx, dy: m.dy });
+                        });
+                        controlledSquare = controlledSquare.concat(moves);
+                        break;
+                    case 'n': 
+                        knightPossible(board, { x: i, y: j}).map(m => {
+                            moves.push({ x: i, y: j, dx: m.dx, dy: m.dy });
+                        });
+                        controlledSquare = controlledSquare.concat(moves);
+                        break;
+                    case 'k': 
+                        kingPossible(board, { x: i, y: j}).map(m => {
+                            moves.push({ x: i, y: j, dx: m.dx, dy: m.dy });
+                        });
+                        controlledSquare = controlledSquare.concat(moves);
+                        break;
+                }       
+            }
+        }
+    } else {
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                let moves = [];
+                switch (board[i][j]) {
+                    case 'P':
+                        pawnPossible(board, { x: i, y: j}).map(m => {
+                            moves.push({ x: i, y: j, dx: m.dx, dy: m.dy });
+                        });
+                        controlledSquare = controlledSquare.concat(moves);
+                        break;
+                    case 'R': 
+                        rookPossible(board, { x: i, y: j}).map(m => {
+                            moves.push({ x: i, y: j, dx: m.dx, dy: m.dy });
+                        });
+                        controlledSquare = controlledSquare.concat(moves);
+                        break;
+                    case 'B':
+                        bishopPossible(board, { x: i, y: j}).map(m => {
+                            moves.push({ x: i, y: j, dx: m.dx, dy: m.dy });
+                        });
+                        controlledSquare = controlledSquare.concat(moves);
+                        break;
+                    case 'Q': 
+                        queenPossible(board, { x: i, y: j}).map(m => {
+                            moves.push({ x: i, y: j, dx: m.dx, dy: m.dy });
+                        });
+                        controlledSquare = controlledSquare.concat(moves);
+                        break;
+                    case 'N': 
+                        knightPossible(board, { x: i, y: j}).map(m => {
+                            moves.push({ x: i, y: j, dx: m.dx, dy: m.dy });
+                        });
+                        controlledSquare = controlledSquare.concat(moves);
+                        break;
+                    case 'K': 
+                        kingPossible(board, { x: i, y: j}).map(m => {
+                            moves.push({ x: i, y: j, dx: m.dx, dy: m.dy });
+                        });
+                        controlledSquare = controlledSquare.concat(moves);
+                        break;
+                }       
+            }
+        }
+    }
+    return controlledSquare;
+}
+
 function isWhite(piece) {
     return piece === piece.toUpperCase();
 }
@@ -229,8 +330,51 @@ function isOpposite(piece1, piece2) {
     return isWhite(piece1) !== isWhite(piece2);
 }
 
-function getKing(color) {
-    let x = null;
-    let y = null;
-    
+function opposite(color) {
+    return color === 'w' ? 'b':'w';
+}
+
+function getBoardAfterMove(board, move) {
+    const { x, y, dx, dy } = move;
+    let newBoard = JSON.parse(JSON.stringify(board));
+    newBoard[x][y] = '';
+    newBoard[dx][dy] = board[x][y];
+    return newBoard;
+}
+
+export function getAllLegalMoves(board, player, state) {
+    let legalMoves = [];
+    const allMoves = getAllMoves(board, player.color);
+    allMoves.map(move => {
+        if (isLegal(board, move, player, state)) {
+            legalMoves.push(move);
+        }
+    })
+    return legalMoves;
+}
+
+export function getKing(board, color) {
+    if (color === 'w') {
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                if (board[i][j] === 'K') {
+                    return {
+                        x: i,
+                        y: j
+                    }
+                }
+            }
+        }
+    } else {
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                if (board[i][j] === 'k') {
+                    return {
+                        x: i,
+                        y: j
+                    }
+                }
+            }
+        }
+    }
 }

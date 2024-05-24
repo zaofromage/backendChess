@@ -1,6 +1,6 @@
 import { getOutMatchmaking } from "./api.js";
 import { getCookie, hostname, convertFEN } from "./utils.js";
-import { isLegal } from "./rules.js";
+import { isLegal, kingIsChecked, getKing, getAllLegalMoves } from "./rules.js";
 
 console.log(document.cookie);
 
@@ -16,6 +16,7 @@ let mousePosX;
 let mousePosY;
 let mouseDownID = -1;
 let selected = undefined;
+let reversed;
 
 await getOutMatchmaking(user);
 
@@ -67,7 +68,7 @@ function send(move) {
         board: board,
         move: move
     }));
-    update();
+    update(kingIsChecked(board, 'w'), kingIsChecked(board, 'b'));
 };
 
 
@@ -109,7 +110,11 @@ function getPiece() {
 }
 
 function whileMouseDown() {
-    update();
+    if (selected === 'k' || selected === 'K') {
+        update();
+    } else {
+        update(kingIsChecked(preBoard, 'w'), kingIsChecked(preBoard, 'b'));
+    }
     drawPiece(selected, mousePosX-(tileSize/2), mousePosY-(tileSize/2));
 }
 
@@ -131,7 +136,6 @@ function mouseup() {
         const move =  { x:prePos.x, y:prePos.y, dx:pos.x, dy:pos.y};
         if (isLegal(preBoard, move, player, state)){
             if ((selected === 'p' || selected === 'P') && (pos.x === 0 || pos.x === 7)) {
-
                 board[pos.x][pos.y] = promote();
             } else {
                 board[pos.x][pos.y] = selected;
@@ -140,49 +144,85 @@ function mouseup() {
         }
         else {
             board[prePos.x][prePos.y] = selected;
-            update();
+            update(kingIsChecked(board, 'w'), kingIsChecked(board, 'b'));
         }
         selected = undefined;
         mouseDownID = -1;
     }
 }
 
-function update() {
+function update(whiteChecked=false, blackChecked=false) {
     for (let i = 0; i < 8; i++){
         for (let j = 0; j < 8; j++){
             if (i%2 == 0){
                 if (j%2 == 0){
-                    ctx.fillStyle = "rgb(225, 225, 225)"
+                    ctx.fillStyle = "rgb(225, 225, 225)";
                     ctx.fillRect(i*tileSize, j*tileSize, tileSize, tileSize);
                 }
                 else{
-                    ctx.fillStyle = "rgb(0, 0, 0)"
+                    ctx.fillStyle = "rgb(0, 0, 0)";
                     ctx.fillRect(i*tileSize, j*tileSize, tileSize, tileSize);
                 }
             }
             else {
                 if (j%2 == 1){
-                    ctx.fillStyle = "rgb(225, 225, 225)"
+                    ctx.fillStyle = "rgb(225, 225, 225)";
                     ctx.fillRect(i*tileSize, j*tileSize, tileSize, tileSize);
                 }
                 else{
-                    ctx.fillStyle = "rgb(0, 0, 0)"
+                    ctx.fillStyle = "rgb(0, 0, 0)";
                     ctx.fillRect(i*tileSize, j*tileSize, tileSize, tileSize);
                 }
             }
         }
     }
-    board.map((row, i) => {
-        row.map((piece, j) => {
-            if (piece !== ""){
-                drawPiece(piece, j*tileSize, i*tileSize);
-            }
+    //let reversedBoard = JSON.parse(JSON.stringify(board));
+    //reversedBoard = reversedBoard.reverse();
+    if (whiteChecked) {
+        ctx.fillStyle = "rgb(255, 0, 0)";
+        let kingPos;
+        //if (reversed) kingPos = getKing(reversedBoard, 'w');
+        //else 
+        kingPos = getKing(board, 'w');
+        ctx.fillRect(kingPos.y*tileSize, kingPos.x*tileSize, tileSize, tileSize);
+    }
+    if (blackChecked) {
+        ctx.fillStyle = "rgb(255, 0, 0)";
+        let kingPos;
+        //if (reversed) kingPos = getKing(reversedBoard, 'b');
+        //else 
+        kingPos = getKing(board, 'b');
+        ctx.fillRect(kingPos.y*tileSize, kingPos.x*tileSize, tileSize, tileSize);
+    } 
+    /*if (reversed) {
+        reversedBoard.map((row, i) => {
+            row.map((piece, j) => {
+                if (piece !== ""){
+                    drawPiece(piece, j*tileSize, i*tileSize);
+                }
+            });
         });
-    });
+    } else {*/
+        board.map((row, i) => {
+            row.map((piece, j) => {
+                if (piece !== ""){
+                    drawPiece(piece, j*tileSize, i*tileSize);
+                }
+            });
+        });
+    //}
+    
 };
 
 function round (val) {
     return val - val%tileSize
+}
+
+function reversePos(pos) {
+    return {
+        x : 7 - pos.x,
+        y : pos.y
+    }
 }
 
 function promote() {
@@ -196,8 +236,9 @@ canvas.addEventListener("mousemove", (evt) => {
     mousePosY = mousePos.y;
 });
 
-canvas.addEventListener("mousedown", () => {
-    mousedown();
+canvas.addEventListener("mousedown", (evt) => {
+    if (evt.button === 0)
+        mousedown();
 })
 
 canvas.addEventListener("mouseup", () => {
@@ -211,16 +252,17 @@ const setUpWs = () => {
         ws.onmessage = message => {
             let game = JSON.parse(message.data);
             player = game.player1.nickname === user ? game.player1 : game.player2;
+            reversed = player.color === 'b';
             board = game.board;
             state = game.state;
-            update();
-            console.log(state);
+            update(kingIsChecked(board, 'w'), kingIsChecked(board, 'b'));
+            if (getAllLegalMoves(board, player, state).length === 0 && state === player.color){
+                console.log('You lose !');
+            }
         }
     } catch (error) {
         console.log(error);
     }
 }
-
 setTimeout(setUpWs, 1000);
 update();
-
