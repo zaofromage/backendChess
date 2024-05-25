@@ -1,5 +1,5 @@
-export const url = 'http://127.0.0.1:5500';
-export const hostname = '127.0.0.1:5500';
+export const url = 'http://192.168.1.69:5500';
+export const hostname = '192.168.1.69:5500';
 
 export const getCookie = (name) => {
     const cookies = document.cookie.split('; ');

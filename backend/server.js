@@ -7,7 +7,7 @@ const utils = require('./utils');
 const gameModel = require('./models/gameModel');
 const WebSocketServer = require('websocket').server;
 
-const hostname = '127.0.0.1';
+const hostname = '192.168.1.69';
 const port = 5500;
 
 const server = createServer((req, res) => {

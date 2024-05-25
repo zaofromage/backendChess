@@ -18,6 +18,11 @@ let mouseDownID = -1;
 let selected = undefined;
 let reversed;
 
+const moveSound = new Audio('./audio/move.mp3');
+const captureSound = new Audio('./audio/capture.mp3');
+const castleSound = new Audio('./audio/castle.mp3');
+const checkSound = new Audio('./audio/check.mp3');
+
 await getOutMatchmaking(user);
 
 let ws = null;
@@ -89,7 +94,7 @@ function getMouseBoardPos () {
 
 function drawPiece (piece, x, y) {
     switch (piece) {
-        case 'P': ctx.drawImage(pawnWhite, x, y, tileSize, tileSize); break;
+        case 'P': ctx.drawImage(pawnWhite, x, y, tileSize-10, tileSize-10); break;
         case 'R': ctx.drawImage(rookWhite, x, y, tileSize, tileSize); break;
         case 'N': ctx.drawImage(knightWhite, x, y, tileSize, tileSize); break;
         case 'B': ctx.drawImage(bishopWhite, x, y, tileSize, tileSize); break;
@@ -104,8 +109,7 @@ function drawPiece (piece, x, y) {
     }
 }
 
-function getPiece() {
-    const pos = getMouseBoardPos();
+function getPiece(pos) {
     return board[pos.x][pos.y];
 }
 
@@ -119,9 +123,11 @@ function whileMouseDown() {
 }
 
 function mousedown() {
-    const pos = getMouseBoardPos();
+    let pos;
+    if(reversed) pos = reversePos(getMouseBoardPos());
+    else pos = getMouseBoardPos();
     if (mouseDownID === -1 && board[pos.x][pos.y] !== ""){
-        selected = getPiece();
+        selected = getPiece(pos);
         prePos = {x: pos.x, y: pos.y};
         preBoard = JSON.parse(JSON.stringify(board));
         board[pos.x][pos.y] = '';
@@ -132,9 +138,13 @@ function mousedown() {
 function mouseup() {
     if(mouseDownID !== -1) {
         clearInterval(mouseDownID);
-        const pos = getMouseBoardPos();
+        let pos;
+        if (reversed) pos = reversePos(getMouseBoardPos());
+        else pos = getMouseBoardPos();
         const move =  { x:prePos.x, y:prePos.y, dx:pos.x, dy:pos.y};
         if (isLegal(preBoard, move, player, state)){
+            if (board[pos.x][pos.y] !== '') captureSound.play();
+            else moveSound.play();
             if ((selected === 'p' || selected === 'P') && (pos.x === 0 || pos.x === 7)) {
                 board[pos.x][pos.y] = promote();
             } else {
@@ -156,45 +166,48 @@ function update(whiteChecked=false, blackChecked=false) {
         for (let j = 0; j < 8; j++){
             if (i%2 == 0){
                 if (j%2 == 0){
-                    ctx.fillStyle = "rgb(225, 225, 225)";
+                    if (reversed) ctx.fillStyle = "rgb(255, 51, 116)";
+                    else ctx.fillStyle = "rgb(225, 225, 225)";
                     ctx.fillRect(i*tileSize, j*tileSize, tileSize, tileSize);
                 }
                 else{
-                    ctx.fillStyle = "rgb(0, 0, 0)";
+                    if (reversed) ctx.fillStyle = "rgb(225, 225, 225)";
+                    else ctx.fillStyle = "rgb(255, 51, 116)";
                     ctx.fillRect(i*tileSize, j*tileSize, tileSize, tileSize);
                 }
             }
             else {
                 if (j%2 == 1){
-                    ctx.fillStyle = "rgb(225, 225, 225)";
+                    if (reversed) ctx.fillStyle = "rgb(255, 51, 116)";
+                    else ctx.fillStyle = "rgb(225, 225, 225)";
                     ctx.fillRect(i*tileSize, j*tileSize, tileSize, tileSize);
                 }
                 else{
-                    ctx.fillStyle = "rgb(0, 0, 0)";
+                    if (reversed) ctx.fillStyle = "rgb(225, 225, 225)";
+                    else ctx.fillStyle = "rgb(255, 51, 116)";
                     ctx.fillRect(i*tileSize, j*tileSize, tileSize, tileSize);
                 }
             }
         }
     }
-    //let reversedBoard = JSON.parse(JSON.stringify(board));
-    //reversedBoard = reversedBoard.reverse();
+    let reversedBoard = JSON.parse(JSON.stringify(board));
+    reversedBoard = reversedBoard.reverse();
     if (whiteChecked) {
         ctx.fillStyle = "rgb(255, 0, 0)";
         let kingPos;
-        //if (reversed) kingPos = getKing(reversedBoard, 'w');
-        //else 
+        if (reversed) kingPos = getKing(reversedBoard, 'w');
+        else 
         kingPos = getKing(board, 'w');
         ctx.fillRect(kingPos.y*tileSize, kingPos.x*tileSize, tileSize, tileSize);
     }
     if (blackChecked) {
         ctx.fillStyle = "rgb(255, 0, 0)";
         let kingPos;
-        //if (reversed) kingPos = getKing(reversedBoard, 'b');
-        //else 
-        kingPos = getKing(board, 'b');
+        if (reversed) kingPos = getKing(reversedBoard, 'b');
+        else kingPos = getKing(board, 'b');
         ctx.fillRect(kingPos.y*tileSize, kingPos.x*tileSize, tileSize, tileSize);
     } 
-    /*if (reversed) {
+    if (reversed) {
         reversedBoard.map((row, i) => {
             row.map((piece, j) => {
                 if (piece !== ""){
@@ -202,7 +215,7 @@ function update(whiteChecked=false, blackChecked=false) {
                 }
             });
         });
-    } else {*/
+    } else {
         board.map((row, i) => {
             row.map((piece, j) => {
                 if (piece !== ""){
@@ -210,7 +223,7 @@ function update(whiteChecked=false, blackChecked=false) {
                 }
             });
         });
-    //}
+    }
     
 };
 
@@ -252,6 +265,9 @@ const setUpWs = () => {
         ws.onmessage = message => {
             let game = JSON.parse(message.data);
             player = game.player1.nickname === user ? game.player1 : game.player2;
+            let opponent = game.player1.nickname === user ? game.player2 : game.player1;
+            document.getElementById('opponent').textContent = `${opponent.nickname} : ${opponent.elo} elo`;
+            document.getElementById('player').textContent = `${player.nickname} : ${player.elo} elo`;
             reversed = player.color === 'b';
             board = game.board;
             state = game.state;

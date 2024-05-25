@@ -1,4 +1,4 @@
-const url = 'http://127.0.0.1:5500';
+const url = 'http://192.168.1.69:5500';
 
 export const getUsers = async () => {
     let req = await fetch(`${url}/users`);
